@@ -8,7 +8,7 @@ import Map from 'components/Map';
 import Snippet from 'components/Snippet';
 
 import { useTracker } from 'hooks';
-import { commafy } from 'lib/util';
+import { commafy, friendlyDate } from 'lib/util';
 
 const LOCATION = {
   lat: 0,
@@ -194,6 +194,11 @@ const IndexPage = () => {
               );
             })}
           </ul>
+        </div>
+        <div className="tracker-last-updated">
+          <p>
+            Last Updated: { stats ? friendlyDate(stats?.updated) : '-' }
+          </p>
         </div>
       </div>
 
