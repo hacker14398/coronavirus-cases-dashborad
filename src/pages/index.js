@@ -6,8 +6,8 @@ import Layout from 'components/Layout';
 import Container from 'components/Container';
 import Map from 'components/Map';
 import Snippet from 'components/Snippet';
-import axios from 'axios';
 
+import { useTracker } from 'hooks';
 
 const LOCATION = {
   lat: 0,
@@ -18,29 +18,78 @@ const DEFAULT_ZOOM = 2;
 
 
 const IndexPage = () => {
+  const { data: stats = {} } = useTracker({
+    api: 'all'
+  });
+
+  const { data: countries = [] } = useTracker({
+    api: 'countries'
+  });
+
+  const hasCountries = Array.isArray(countries) && countries.length > 0;
+
+  const dashboardStats = [
+    {
+      primary: {
+        label: 'Total Cases',
+        value: stats?.cases
+      },
+      secondary: {
+        label: 'Per 1 Million',
+        value: stats?.casesPerOneMillion
+      }
+    },
+    {
+      primary: {
+        label: 'Total Deaths',
+        value: stats?.deaths
+      },
+      secondary: {
+        label: 'Per 1 Million',
+        value: stats?.deathsPerOneMillion
+      }
+    },
+    {
+      primary: {
+        label: 'Total Tests',
+        value: stats?.tests
+      },
+      secondary: {
+        label: 'Per 1 Million',
+        value: stats?.testsPerOneMillion
+      }
+    },
+    {
+      primary: {
+        label: 'Active Cases',
+        value: stats?.active
+      }
+    },
+    {
+      primary: {
+        label: 'Critical Cases',
+        value: stats?.critical
+      }
+    },
+    {
+      primary: {
+        label: 'Recovered Cases',
+        value: stats?.recovered
+      }
+    }
+  ]
 /**
  * MapEffect
  * @description This is an example of creating an effect used to zoom in and set a popup on load
  */
 
   async function MapEffect({ leafletElement: map } = {}){
-    let response;
-
-    try {
-      response = await axios.get('https://corona.lmao.ninja/v2/countries');
-    } catch(e) {
-      console.log(`Failed to fetch countries: ${e.message}`, e);
-      return;
-    }
-
-    const { data = [] } = response;
-    const hasData = Array.isArray(data) && data.length > 0;
-
-    if ( !hasData ) return;
+    
+    if ( !hasCountries ) return;
 
     const geoJson = {
       type: 'FeatureCollection',
-      features: data.map((country = {}) => {
+      features: countries.map((country = {}) => {
         const { countryInfo = {} } = country;
         const { lat, long: lng } = countryInfo;
         return {
@@ -121,8 +170,31 @@ const IndexPage = () => {
       <Helmet>
         <title>Home Page</title>
       </Helmet>
-
-      <Map {...mapSettings} />
+      <div className="tracker">
+        <Map {...mapSettings} />
+        <div className="tracker-stats">
+          <ul>
+            { dashboardStats.map(({ primary = {}, secondary = {} }, i) => {
+              return (
+                <li key={`Stat-${i}`} className="tracker-stat">
+                  { primary.value && (
+                    <p className="tracker-stat-primary">
+                      { primary.value }
+                      <strong>{ primary.label }</strong>
+                    </p>
+                  )}
+                  { secondary.value && (
+                    <p className="tracker-stat-secondary">
+                      { secondary.value }
+                      <strong>{ secondary.label }</strong>
+                    </p>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </div>
 
       <Container type="content" className="text-center home-start">
         <h2>Still Getting Started?</h2>
